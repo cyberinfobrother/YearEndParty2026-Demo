@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>IBSI Team Fest Committee Scanner</title>
+  <meta name="description" content="Official committee QR scanner for IBSI Team Fest 2026 Event Day check-ins.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @keyframes scanLine {
+      0% { top: 6%; opacity: 0.8; }
+      50% { top: 90%; opacity: 1; }
+      100% { top: 6%; opacity: 0.8; }
+    }
+    .animate-scan-line {
+      animation: scanLine 2.2s ease-in-out infinite;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background-color: #040c1e;
+      background-image: 
+        linear-gradient(to bottom, rgba(4, 12, 30, 0.85) 0%, rgba(6, 18, 42, 0.75) 40%, rgba(4, 12, 30, 0.94) 100%),
+        url('/ibsi_theme_bg.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(7, 18, 42, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+    .glass-bezel {
+      background: rgba(4, 10, 26, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 2px solid rgba(0, 229, 255, 0.4);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+    }
+    #reader {
+      width: 100% !important;
+      border: none !important;
+      background: #04091a !important;
+    }
+    #reader video {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 48vh !important;
+      object-fit: cover !important;
+      border-radius: 1rem !important;
+    }
+    #reader img { display: none !important; }
+    input, select, button { touch-action: manipulation; }
+    @media screen and (max-width: 640px) {
+      input, select { font-size: 16px !important; }
+    }
+  </style>
+</head>
+<body class="p-3 sm:p-5 flex flex-col items-center justify-start pb-10">
+
+  <!-- Container -->
+  <div class="w-full max-w-xl mx-auto flex flex-col items-center">
+    
+    <!-- Top Utility Bar -->
+    <header class="w-full mb-3 text-center">
+      <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-white/15">
+        
+        <div class="flex items-center gap-2 text-left">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 via-teal-500 to-orange-500 flex items-center justify-center text-white shadow font-black text-xs shrink-0">
+            🧭
+          </div>
+          <div>
+            <div class="text-[11px] font-black text-white tracking-wider flex items-center gap-1.5 leading-none">
+              <span>IBSI TEAM FEST</span>
+              <span class="text-[9px] font-extrabold text-orange-300 bg-orange-500/20 px-1.5 py-0.2 rounded border border-orange-400/40">2026</span>
+            </div>
+            <div class="text-[9px] text-cyan-300/90 font-medium tracking-wide mt-0.5">
+              One Team • One Voyage • One Champion
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <!-- Status pill -->
+          <button id="btnSettings" class="px-2 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-950/70 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900/70 shadow transition">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Sheets Live</span>
+          </button>
+
+          <!-- Sound toggle -->
+          <button id="btnSound" class="p-2 rounded-xl border text-xs font-semibold bg-white/10 text-emerald-400 border-white/20 hover:bg-white/15 transition" title="Toggle Sound">
+            🔊
+          </button>
+
+          <!-- History -->
+          <button id="btnHistory" class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] font-semibold text-[#9BB0D3] hover:text-white flex items-center gap-1 transition">
+            Scans <span id="scanCountBadge" class="bg-emerald-400 text-black text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Title Header -->
+      <div class="my-2 inline-flex flex-col items-center">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 via-orange-500/20 to-teal-500/20 border border-cyan-400/30 text-[10px] font-bold text-cyan-200 uppercase tracking-widest backdrop-blur-md mb-1 shadow-sm">
+          <span>Fifteen Years, One Horizon</span>
+          <span class="text-orange-400">•</span>
+          <span class="text-orange-300">Since 2011</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none drop-shadow">
+          <span>IBSI </span>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 font-extrabold italic">TEAM FEST </span>
+          <span class="text-cyan-400">2026</span>
+        </h1>
+
+        <!-- Prominent Committee Scanner Badge -->
+        <div class="mt-2.5 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-cyan-950/80 border border-emerald-500/40 text-white shadow-lg">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#10B981] animate-pulse"></div>
+          <span class="text-xs sm:text-sm font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 uppercase">
+            Committee Scanner
+          </span>
+          <span class="px-2 py-0.2 text-[9px] font-bold rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+            Active
+          </span>
+        </div>
+      </div>
+
+      <!-- Date & Venue info bar -->
+      <div class="mt-2 flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-[11px]">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/45 border border-white/15 text-white/90">
+          <span class="text-orange-400 font-bold">📅 Oct 10, 2026</span>
+          <span class="text-white/30">•</span>
+          <span class="text-cyan-200">Gameville Central Park, Greenfield, Mandaluyong</span>
+        </div>
+        <a href="https://docs.google.com/spreadsheets/d/1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs/edit#gid=0" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-500/40 text-emerald-300 font-mono text-[10px]">
+          <span>Sheet [EventDay]</span> ↗
+        </a>
+      </div>
+    </header>
+
+    <!-- Scanner Viewport Card -->
+    <main class="w-full glass-card rounded-2xl p-4 sm:p-5 border border-white/15 shadow-2xl text-center">
+      
+      <!-- Video / Idle Area -->
+      <div id="viewportContainer" class="relative min-h-[280px] sm:min-h-[300px] rounded-2xl glass-bezel flex flex-col items-center justify-center overflow-hidden transition-all">
+        
+        <!-- html5-qrcode target -->
+        <div id="reader" class="w-full h-full min-h-[280px] rounded-2xl overflow-hidden hidden"></div>
+
+        <!-- Laser Reticle (Visible when scanning) -->
+        <div id="scanReticle" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden">
+          <div class="relative w-56 h-56 border-2 border-cyan-400/60 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+            <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
+            <div class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
+            <div class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
+            <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent shadow-[0_0_14px_#00E5FF] animate-scan-line"></div>
+          </div>
+          <div class="absolute bottom-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[11px] text-white border border-white/20 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Align Attendee QR within Frame</span>
+          </div>
+        </div>
+
+        <!-- Idle State View -->
+        <div id="idleView" class="p-6 text-center flex flex-col items-center justify-center gap-3">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-3xl shadow-inner">
+            📷
+          </div>
+          <div>
+            <div class="text-sm font-black text-white uppercase tracking-wider">Ready to Check-in Attendees</div>
+            <div class="text-xs text-[#9BB0D3] mt-1 max-w-xs">
+              Point phone camera at participant QR badge or upload a badge photo to record check-in on <span class="text-cyan-300 font-bold">EventDay</span> tab.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scanner Action Controls -->
+      <div class="mt-4 flex flex-col gap-2.5">
+        <button id="btnStartScan" class="w-full py-3.5 px-4 min-h-[48px] rounded-xl font-black text-sm text-white bg-gradient-to-r from-cyan-500 via-teal-500 to-orange-500 hover:from-cyan-400 hover:to-orange-400 active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/50 border border-cyan-300/40 cursor-pointer">
+          <span>📷 Start Live Camera Scanner</span>
+        </button>
+
+        <div id="activeControls" class="hidden flex items-center justify-center gap-2">
+          <button id="btnStopScan" class="flex-1 py-3 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-rose-950/70 hover:bg-rose-900/70 text-rose-300 border border-rose-500/40 transition cursor-pointer">
+            ⏹ Stop Camera
+          </button>
+          <button id="btnFlipCam" class="py-3 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/20 transition cursor-pointer">
+            🔄 Flip Camera
+          </button>
+        </div>
+
+        <button id="btnUploadFile" class="w-full py-3 px-4 min-h-[44px] rounded-xl font-bold text-xs text-white backdrop-blur-xl bg-white/10 hover:bg-white/15 border border-white/20 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer">
+          <span>📁 Take / Upload QR Photo</span>
+        </button>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+    </main>
+
+    <!-- Scan Result Card -->
+    <div id="resultCard" class="w-full mt-4 p-5 rounded-2xl glass-card text-center border-2 border-emerald-400/60 shadow-2xl hidden">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 text-[11px] font-semibold text-emerald-300 border border-emerald-400/30 mb-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="resultBadgeText">Check-in Confirmed</span>
+      </div>
+
+      <div id="resultTitle" class="text-xl font-black tracking-wide uppercase text-emerald-300 mb-1">
+        CHECK-IN SUCCESSFUL!
+      </div>
+      <p id="resultMessage" class="text-xs text-white/90 mb-3">
+        Attendee recorded to Google Sheets [EventDay]
+      </p>
+
+      <!-- Details Box -->
+      <div class="p-4 rounded-xl bg-black/60 border border-white/15 text-left space-y-2.5 max-w-md mx-auto text-xs">
+        <div class="text-[10px] uppercase font-bold text-emerald-400 border-b border-white/10 pb-1 flex items-center justify-between">
+          <span>Event Day Log Data</span>
+          <span class="text-cyan-300 font-mono">Tab: EventDay</span>
+        </div>
+
+        <div>
+          <div class="text-[10px] text-[#9BB0D3]">Full Name</div>
+          <div id="resFullName" class="text-lg font-black text-white">-</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+          <div>
+            <div class="text-[10px] text-[#9BB0D3]">BU (Business Unit)</div>
+            <div id="resBu" class="font-bold text-white text-xs">-</div>
+          </div>
+          <div>
+            <div class="text-[10px] text-[#9BB0D3]">Team Name</div>
+            <div id="resTeam" class="font-bold text-white text-xs">-</div>
+          </div>
+        </div>
+
+        <!-- Timestamp & Status with Green Highlight -->
+        <div class="pt-2 border-t border-white/10 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-[#9BB0D3]">Timestamp</div>
+            <div id="resTimestamp" class="font-mono text-[11px] text-white/90">-</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] text-[#9BB0D3] mb-0.5">Status</div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#22c55e] text-[#064e3b] font-black text-xs shadow-md border border-[#16a34a] animate-pulse">
+              <span>✓ Check-in</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sheet confirmation -->
+        <div class="pt-2 border-t border-white/10 text-[11px] text-emerald-300 bg-emerald-950/60 p-2 rounded-lg border border-emerald-500/40 flex items-center justify-between">
+          <span id="resSheetStatus">Logged to Google Sheet [EventDay]</span>
+          <a href="https://docs.google.com/spreadsheets/d/1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs/edit#gid=0" target="_blank" class="text-cyan-300 underline font-mono text-[10px]">View ↗</a>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+        <button id="btnNextScan" class="w-full sm:w-auto flex-1 py-3 px-5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 transition shadow-lg cursor-pointer">
+          Ready for Next Attendee →
+        </button>
+        <button id="btnDismissResult" class="w-full sm:w-auto py-3 px-4 rounded-xl font-semibold text-xs text-white/90 bg-black/40 hover:bg-black/60 border border-white/15 cursor-pointer">
+          Dismiss
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Check-in Form -->
+    <div class="w-full mt-4 p-4 rounded-2xl glass-card text-left border border-white/15">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-400 font-bold">✍️</span>
+          <span class="text-xs font-bold text-white tracking-wide uppercase">Manual Attendee Check-In</span>
+        </div>
+        <button id="btnToggleManual" class="text-xs text-cyan-300 hover:text-white font-semibold cursor-pointer">
+          Show Form
+        </button>
+      </div>
+
+      <form id="manualForm" class="mt-3 space-y-3 hidden">
+        <div>
+          <label class="block text-[11px] font-semibold text-[#9BB0D3] mb-1">Full Name *</label>
+          <input type="text" id="manualName" required placeholder="Enter attendee full name" class="w-full px-3 py-2 bg-black/50 text-white rounded-xl border border-white/15 focus:outline-none focus:border-emerald-400 text-xs">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-[#9BB0D3] mb-1">BU (Business Unit)</label>
+            <select id="manualBu" class="w-full px-3 py-2 bg-black/60 text-white rounded-xl border border-white/15 text-xs">
+              <option value="BPO – FAS">BPO – FAS</option>
+              <option value="BPO – HRS">BPO – HRS</option>
+              <option value="Corporate Services - Finance and Admin">Corporate Services - Finance and Admin</option>
+              <option value="Corporate Services - Process Excellence">Corporate Services - Process Excellence</option>
+              <option value="Corporate Services - Human Resources">Corporate Services - Human Resources</option>
+              <option value="Digital Platforms - Advanced Applications">Digital Platforms - Advanced Applications</option>
+              <option value="Digital Platforms - Core and Emerging Applications">Digital Platforms - Core and Emerging Applications</option>
+              <option value="Growth - Commercials and Contracts Management">Growth - Commercials and Contracts Management</option>
+              <option value="IT Delivery- Governance">IT Delivery- Governance</option>
+              <option value="IT Delivery – Cybersecurity">IT Delivery – Cybersecurity</option>
+              <option value="IT Delivery – Operations">IT Delivery – Operations</option>
+              <option value="IT Delivery – PMO">IT Delivery – PMO</option>
+              <option value="IT Delivery - Solutions and Architecture">IT Delivery - Solutions and Architecture</option>
+              <option value="Office of the President">Office of the President</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-[#9BB0D3] mb-1">Team Name</label>
+            <input type="text" id="manualTeam" placeholder="Enter assigned team" class="w-full px-3 py-2 bg-black/50 text-white rounded-xl border border-white/15 text-xs">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-1.5 transition shadow cursor-pointer">
+          <span>Record Check-in to Google Sheet</span>
+          <span class="bg-[#22c55e] text-[#064e3b] font-extrabold px-1.5 py-0.2 rounded text-[10px]">Green Highlight</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer info -->
+    <footer class="w-full mt-4 p-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2 text-[#9BB0D3]">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Connected to Google Sheets: <strong>EventDay</strong> tab</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="footerScanCount" class="text-emerald-400 font-bold font-mono">0 Check-ins Recorded</span>
+        <a href="https://docs.google.com/spreadsheets/d/1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs/edit#gid=0" target="_blank" class="text-cyan-300 underline font-mono text-[11px]">Open Sheet ↗</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Modal: Scans History -->
+  <div id="modalHistory" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md hidden">
+    <div class="w-full max-w-xl bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5 text-white shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-[#1E293B]">
+        <div>
+          <h3 class="font-bold text-sm text-white">Check-in History (EventDay Tab)</h3>
+          <p id="historySummary" class="text-[11px] text-[#8E9BB5]">0 attendees recorded</p>
+        </div>
+        <button id="btnCloseHistory" class="text-[#8E9BB5] hover:text-white text-lg p-1">✕</button>
+      </div>
+      <div class="py-3 flex items-center justify-between gap-2 border-b border-[#1E293B]">
+        <input type="text" id="historySearch" placeholder="Search by name, BU, or team..." class="flex-1 px-3 py-1.5 bg-[#070B14] border border-[#1E293B] rounded-lg text-xs text-white">
+        <button id="btnExportCsv" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition cursor-pointer">
+          Export CSV
+        </button>
+        <button id="btnClearHistory" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-800/40 text-rose-300 rounded-lg text-xs font-bold transition cursor-pointer">
+          Clear
+        </button>
+      </div>
+      <div id="historyList" class="flex-1 overflow-y-auto my-3 space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Connection Settings -->
+  <div id="modalSettings" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md hidden">
+    <div class="w-full max-w-lg bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5 text-white shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-[#1E293B]">
+        <div>
+          <h3 class="font-bold text-sm text-white">Google Sheets Integration Settings</h3>
+          <p class="text-[11px] text-[#8E9BB5]">Target Sheet: <span class="font-mono text-cyan-300">1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs</span></p>
+        </div>
+        <button id="btnCloseSettings" class="text-[#8E9BB5] hover:text-white text-lg p-1">✕</button>
+      </div>
+      <div class="py-4 space-y-3 text-xs">
+        <div class="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-1">
+          <div class="font-bold text-emerald-300">Target Tab: EventDay</div>
+          <div class="text-[11px] text-[#BACAE5]">
+            Logs: <strong>Timestamp | Full Name | BU | Team Name | Status (Green Highlight)</strong>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-white mb-1">Google Apps Script Web App URL</label>
+          <input type="text" id="settingUrl" value="https://script.google.com/a/macros/ibs.com.ph/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec" class="w-full px-3 py-2 bg-[#091122] border border-[#232F4C] rounded-xl text-xs font-mono text-white">
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnSaveSetting" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition cursor-pointer">
+            Save URL
+          </button>
+          <button id="btnPingTest" class="py-2 px-4 bg-[#1E293B] hover:bg-[#2B3B54] text-white font-bold rounded-xl transition cursor-pointer">
+            Ping Handshake
+          </button>
+        </div>
+        <div id="pingResult" class="p-3 rounded-xl border border-white/10 hidden text-xs font-mono"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Application Script -->
+  <script>
+    (function() {
+      // Configuration
+      const SPREADSHEET_ID = "1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs";
+      const SHEET_TAB_NAME = "EventDay";
+      const DEFAULT_URL = "https://script.google.com/a/macros/ibs.com.ph/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec";
+
+      const SCANS_KEY = "ibsi_tf_scans_clean_v3";
+      const URL_KEY = "ibsi_tf_url_v2";
+      const SOUND_KEY = "ibsi_tf_sound_v2";
+
+      // Purge old test keys
+      try {
+        localStorage.removeItem("ibsi_tf_scans_v2");
+        localStorage.removeItem("ibsi_teamfest_scans_prod");
+      } catch (e) {}
+
+      function isMockAttendee(s) {
+        if (!s || !s.fullName) return true;
+        const n = String(s.fullName).toLowerCase().trim();
+        return (
+          n.length === 0 ||
+          n.includes("test") ||
+          n.includes("juan dela cruz") ||
+          n.includes("john mark") ||
+          n.includes("maria santos") ||
+          n.includes("carlos mendoza") ||
+          n.includes("mock") ||
+          n.includes("sample")
+        );
+      }
+
+      let soundEnabled = localStorage.getItem(SOUND_KEY) !== "false";
+      let scans = [];
+      try {
+        const raw = localStorage.getItem(SCANS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            scans = parsed.filter(function(s) { return !isMockAttendee(s); });
+          }
+        }
+      } catch (e) {
+        scans = [];
+      }
+
+      // Audio feedback
+      let audioCtx = null;
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      function playTone(freq, type, duration, startTime) {
+        if (!soundEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const t = startTime || 0;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + t);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + t);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + t);
+          osc.stop(ctx.currentTime + t + duration);
+        } catch (e) {}
+      }
+
+      function soundSuccess() {
+        playTone(523.25, "sine", 0.15, 0);
+        playTone(659.25, "sine", 0.15, 0.12);
+        playTone(783.99, "sine", 0.25, 0.24);
+      }
+      function soundDuplicate() {
+        playTone(392.00, "triangle", 0.2, 0);
+        playTone(329.63, "triangle", 0.3, 0.18);
+      }
+      function soundTap() {
+        playTone(800, "sine", 0.05, 0);
+      }
+
+      // Counters & Top Bar
+      const scanCountBadge = document.getElementById("scanCountBadge");
+      const footerScanCount = document.getElementById("footerScanCount");
+      function updateScanCounters() {
+        const count = scans.length;
+        if (scanCountBadge) scanCountBadge.textContent = count;
+        if (footerScanCount) footerScanCount.textContent = count + " Check-ins Recorded";
+      }
+      updateScanCounters();
+
+      const btnSound = document.getElementById("btnSound");
+      if (btnSound) {
+        btnSound.textContent = soundEnabled ? "🔊" : "🔇";
+        btnSound.addEventListener("click", function() {
+          soundEnabled = !soundEnabled;
+          localStorage.setItem(SOUND_KEY, String(soundEnabled));
+          btnSound.textContent = soundEnabled ? "🔊" : "🔇";
+        });
+      }
+
+      // ==========================================
+      // CORE CAMERA SCANNER SETUP (PRIORITY 1)
+      // ==========================================
+      let html5QrCode = null;
+      let isScanning = false;
+      let currentCameraFacing = "environment";
+      let isScanLocked = false;
+      let lastScannedName = "";
+      let lastScannedTime = 0;
+
+      const reader = document.getElementById("reader");
+      const scanReticle = document.getElementById("scanReticle");
+      const idleView = document.getElementById("idleView");
+      const btnStartScan = document.getElementById("btnStartScan");
+      const activeControls = document.getElementById("activeControls");
+      const btnStopScan = document.getElementById("btnStopScan");
+      const btnFlipCam = document.getElementById("btnFlipCam");
+      const btnUploadFile = document.getElementById("btnUploadFile");
+      const fileInput = document.getElementById("fileInput");
+
+      async function startCamera() {
+        if (isScanning) return;
+        isScanLocked = false;
+        soundTap();
+
+        if (typeof Html5Qrcode === "undefined") {
+          alert("Camera scanner library is still initializing. Please wait a moment or use the 'Take / Upload QR Photo' option.");
+          return;
+        }
+
+        idleView.classList.add("hidden");
+        reader.classList.remove("hidden");
+        scanReticle.classList.remove("hidden");
+        btnStartScan.classList.add("hidden");
+        activeControls.classList.remove("hidden");
+
+        try {
+          if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+          }
+          await html5QrCode.start(
+            { facingMode: currentCameraFacing },
+            { fps: 15, qrbox: { width: 250, height: 250 } },
+            function(decodedText) { onQrScanned(decodedText); },
+            function() {}
+          );
+          isScanning = true;
+        } catch (err) {
+          alert("Camera access error: " + (err.message || err) + "\\n\\nTip: Ensure camera permissions are allowed or use 'Take / Upload QR Photo'.");
+          stopCamera();
+        }
+      }
+
+      async function stopCamera() {
+        if (!html5QrCode) {
+          isScanning = false;
+          reader.classList.add("hidden");
+          scanReticle.classList.add("hidden");
+          idleView.classList.remove("hidden");
+          btnStartScan.classList.remove("hidden");
+          activeControls.classList.add("hidden");
+          return;
+        }
+        try {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+        } catch (e) {}
+        isScanning = false;
+        reader.classList.add("hidden");
+        scanReticle.classList.add("hidden");
+        idleView.classList.remove("hidden");
+        btnStartScan.classList.remove("hidden");
+        activeControls.classList.add("hidden");
+      }
+
+      if (btnStartScan) btnStartScan.onclick = startCamera;
+      if (btnStopScan) btnStopScan.onclick = function() { soundTap(); stopCamera(); };
+      if (btnFlipCam) btnFlipCam.onclick = async function() {
+        soundTap();
+        currentCameraFacing = currentCameraFacing === "environment" ? "user" : "environment";
+        await stopCamera();
+        await startCamera();
+      };
+
+      if (btnUploadFile && fileInput) {
+        btnUploadFile.onclick = function() { fileInput.click(); };
+        fileInput.onchange = async function(e) {
+          if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            try {
+              if (typeof Html5Qrcode === "undefined") {
+                alert("Scanner library is initializing. Please tap again in a moment.");
+                return;
+              }
+              const qrScanner = new Html5Qrcode("reader");
+              const decoded = await qrScanner.scanFile(file, true);
+              onQrScanned(decoded);
+            } catch (err) {
+              alert("Could not detect a QR code in the uploaded image. Please try another photo.");
+            }
+          }
+        };
+      }
+
+      // Parser for QR badge formats
+      function parseQr(raw) {
+        let text = (raw || "").trim();
+
+        // 0. Base64 decode check (handles createSecureQRPayload_ from QRService.gs)
+        if (!text.startsWith("{") && !text.startsWith("http") && text.length > 12 && !text.includes(" ")) {
+          try {
+            const decoded = atob(text);
+            if (decoded.startsWith("{") && decoded.endsWith("}")) {
+              text = decoded;
+            }
+          } catch(e) {}
+        }
+
+        if (text.startsWith("{") && text.endsWith("}")) {
+          try {
+            const obj = JSON.parse(text);
+            return {
+              fullName: obj.fullName || obj.name || obj["Full Name"] || "Attendee",
+              bu: obj.bu || obj.businessUnit || obj.department || "Technology",
+              teamName: obj.teamName || obj.team || "IBSI Team",
+              employeeId: obj.employeeId || obj.employeeID || ""
+            };
+          } catch(e) {}
+        }
+        const delims = [",", "|", ";", "\\n", "/"];
+        for (let i = 0; i < delims.length; i++) {
+          const delim = delims[i];
+          if (text.includes(delim)) {
+            const parts = text.split(delim).map(function(s) { return s.trim(); }).filter(Boolean);
+            if (parts.length >= 3) return { fullName: parts[0], bu: parts[1], teamName: parts[2], employeeId: "" };
+            if (parts.length === 2) return { fullName: parts[0], bu: parts[1], teamName: "IBSI Team", employeeId: "" };
+          }
+        }
+        return { fullName: text || "Participant", bu: "Technology & Digital", teamName: "IBSI Team", employeeId: "" };
+      }
+
+      // Check-in Processing
+      async function onQrScanned(rawText) {
+        // Prevent concurrent or repeat frames from triggering multiple submissions
+        if (isScanLocked) return;
+        if (!rawText || !rawText.trim()) return;
+
+        const parsed = parseQr(rawText);
+        const nameLower = (parsed.fullName || "").trim().toLowerCase();
+        const now = Date.now();
+
+        // 1. Immediately lock scanning so subsequent video frames are ignored
+        isScanLocked = true;
+
+        // 2. Debounce burst protection: if same attendee was scanned in last 8 seconds, ignore repeat
+        if (nameLower && nameLower === lastScannedName && (now - lastScannedTime < 8000)) {
+          return;
+        }
+        lastScannedName = nameLower;
+        lastScannedTime = now;
+
+        // 3. Immediately stop camera stream so it stops decoding more frames
+        try {
+          if (html5QrCode && isScanning) {
+            await stopCamera();
+          }
+        } catch (e) {}
+
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        // 4. Process check-in and submit exactly ONE row to Google Sheets
+        await processCheckIn(parsed);
+      }
+
+      async function processCheckIn(attendee) {
+        const now = new Date();
+        const timestampStr = now.toLocaleString();
+        const cleanNameLower = (attendee.fullName || "").trim().toLowerCase();
+        
+        // Strict duplicate check: Check if attendee is already checked in
+        const isDuplicate = scans.some(function(s) {
+          return (s.fullName || "").trim().toLowerCase() === cleanNameLower;
+        });
+        
+        const scanRecord = {
+          id: "scan-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
+          timestamp: Date.now(),
+          dateTime: timestampStr,
+          fullName: attendee.fullName,
+          bu: attendee.bu,
+          teamName: attendee.teamName,
+          status: "Check-in",
+          isDuplicate: isDuplicate,
+          syncedToExternal: isDuplicate ? true : false
+        };
+
+        scans.unshift(scanRecord);
+        localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+        updateScanCounters();
+
+        showResultCard(scanRecord);
+
+        // CRITICAL SINGLE-SUBMISSION RULE:
+        // If attendee is ALREADY checked in, DO NOT send a duplicate row to Google Sheets!
+        if (isDuplicate) {
+          soundDuplicate();
+          const statusEl = document.getElementById("resSheetStatus");
+          if (statusEl) statusEl.textContent = "Attendee already checked in — duplicate Google Sheets row prevented";
+          return;
+        }
+
+        // Attendee is NEW: Submit EXACTLY ONE row to Google Sheets
+        soundSuccess();
+        try {
+          if (typeof confetti === "function") {
+            confetti({ particleCount: 90, spread: 60, origin: { y: 0.6 } });
+          }
+        } catch(e) {}
+
+        // Post to Google Apps Script / Google Sheets
+        const scriptUrl = localStorage.getItem(URL_KEY) || DEFAULT_URL;
+        const payload = {
+          action: "ibsi_checkin",
+          event: "TEAM_FEST_CHECKIN",
+          spreadsheetId: SPREADSHEET_ID,
+          sheetName: SHEET_TAB_NAME,
+          timestamp: timestampStr,
+          fullName: attendee.fullName,
+          name: attendee.fullName,
+          participantName: attendee.fullName,
+          bu: attendee.bu,
+          department: attendee.bu,
+          teamName: attendee.teamName,
+          team: attendee.teamName,
+          employeeId: attendee.employeeId || "",
+          status: "Check-in",
+          highlightColor: "#4ade80",
+          isDuplicate: false,
+          row: [timestampStr, attendee.fullName, attendee.bu, attendee.teamName, "Check-in"]
+        };
+
+        const statusEl = document.getElementById("resSheetStatus");
+        if (statusEl) statusEl.textContent = "Submitting 1 item to Google Sheet [" + SHEET_TAB_NAME + "]...";
+
+        try {
+          const res = await fetch(scriptUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            scanRecord.syncedToExternal = true;
+            let resJson = null;
+            try { resJson = await res.json(); } catch(e) {}
+            const rowInfo = (resJson && resJson.rowNumber) ? " (Row " + resJson.rowNumber + ")" : "";
+            if (statusEl) statusEl.textContent = "✓ Logged 1 row to Google Sheet [" + SHEET_TAB_NAME + "]" + rowInfo;
+            localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+          } else {
+            if (statusEl) statusEl.textContent = "Saved locally — pending Google Sheets sync";
+          }
+        } catch (e) {
+          if (statusEl) statusEl.textContent = "Saved locally — pending Google Sheets sync";
+        }
+      }
+
+      function showResultCard(record) {
+        const card = document.getElementById("resultCard");
+        if (!card) return;
+
+        document.getElementById("resFullName").textContent = record.fullName;
+        document.getElementById("resBu").textContent = record.bu;
+        document.getElementById("resTeam").textContent = record.teamName;
+        document.getElementById("resTimestamp").textContent = record.dateTime;
+
+        const title = document.getElementById("resultTitle");
+        const msg = document.getElementById("resultMessage");
+        const badge = document.getElementById("resultBadgeText");
+
+        if (record.isDuplicate) {
+          title.textContent = "ALREADY CHECKED IN";
+          title.className = "text-xl font-black tracking-wide uppercase text-amber-300 mb-1";
+          msg.textContent = "Attendee " + record.fullName + " was already recorded in EventDay.";
+          badge.textContent = "Duplicate Record Detected";
+        } else {
+          title.textContent = "CHECK-IN SUCCESSFUL!";
+          title.className = "text-xl font-black tracking-wide uppercase text-emerald-300 mb-1";
+          msg.textContent = "Check-in confirmed with green status highlight on tab EventDay.";
+          badge.textContent = "Check-in Confirmed";
+        }
+
+        card.classList.remove("hidden");
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      const btnDismissResult = document.getElementById("btnDismissResult");
+      if (btnDismissResult) {
+        btnDismissResult.onclick = function() {
+          isScanLocked = false;
+          document.getElementById("resultCard").classList.add("hidden");
+        };
+      }
+
+      const btnNextScan = document.getElementById("btnNextScan");
+      if (btnNextScan) {
+        btnNextScan.onclick = function() {
+          isScanLocked = false;
+          document.getElementById("resultCard").classList.add("hidden");
+          startCamera();
+        };
+      }
+
+      // Manual Check-in Form
+      const btnToggleManual = document.getElementById("btnToggleManual");
+      const manualForm = document.getElementById("manualForm");
+      if (btnToggleManual && manualForm) {
+        btnToggleManual.onclick = function() {
+          const hidden = manualForm.classList.toggle("hidden");
+          btnToggleManual.textContent = hidden ? "Show Form" : "Hide Form";
+        };
+
+        manualForm.onsubmit = async function(e) {
+          e.preventDefault();
+          const fullName = document.getElementById("manualName").value.trim();
+          const bu = document.getElementById("manualBu").value;
+          const teamName = document.getElementById("manualTeam").value.trim() || "IBSI Team";
+          if (!fullName) return;
+          await processCheckIn({ fullName: fullName, bu: bu, teamName: teamName });
+          document.getElementById("manualName").value = "";
+        };
+      }
+
+      // ==========================================
+      // MODAL 1: HISTORY & EXPORT
+      // ==========================================
+      try {
+        const modalHistory = document.getElementById("modalHistory");
+        const historyList = document.getElementById("historyList");
+        const historySummary = document.getElementById("historySummary");
+        const historySearch = document.getElementById("historySearch");
+
+        function renderHistory() {
+          if (!historyList || !historySummary) return;
+          const filter = historySearch ? historySearch.value.toLowerCase() : "";
+          const filtered = scans.filter(function(s) { 
+            return s.fullName.toLowerCase().includes(filter) ||
+              s.bu.toLowerCase().includes(filter) ||
+              s.teamName.toLowerCase().includes(filter);
+          });
+
+          historySummary.textContent = filtered.length + " attendees listed";
+          historyList.innerHTML = "";
+
+          if (filtered.length === 0) {
+            historyList.innerHTML = '<div class="py-8 text-center text-[#8E9BB5]">No check-in records found.</div>';
+            return;
+          }
+
+          filtered.forEach(function(s) {
+            const div = document.createElement("div");
+            div.className = "p-3 rounded-xl bg-[#091122] border border-[#1A253D] flex items-center justify-between gap-2";
+            div.innerHTML = "<div><div class='font-bold text-white flex items-center gap-2'>" +
+              s.fullName +
+              "<span class='text-[9px] bg-[#22c55e] text-[#064e3b] font-bold px-1.5 py-0.2 rounded'>Check-in</span></div>" +
+              "<div class='text-[10px] text-[#8E9BB5] mt-0.5'>" + s.bu + " • " + s.teamName + "</div></div>" +
+              "<div class='text-right text-[10px] font-mono text-[#8E9BB5]'><div>" + s.dateTime + "</div>" +
+              "<div class='" + (s.syncedToExternal ? "text-emerald-400" : "text-amber-400") + " text-[9px] mt-0.5'>" +
+              (s.syncedToExternal ? "✓ Synced to Sheets" : "● Local Only") + "</div></div>";
+            historyList.appendChild(div);
+          });
+        }
+
+        const btnHistory = document.getElementById("btnHistory");
+        const btnCloseHistory = document.getElementById("btnCloseHistory");
+        if (btnHistory && modalHistory) {
+          btnHistory.onclick = function() {
+            renderHistory();
+            modalHistory.classList.remove("hidden");
+          };
+        }
+        if (btnCloseHistory && modalHistory) {
+          btnCloseHistory.onclick = function() { modalHistory.classList.add("hidden"); };
+        }
+        if (historySearch) historySearch.oninput = renderHistory;
+
+        const btnExportCsv = document.getElementById("btnExportCsv");
+        if (btnExportCsv) {
+          btnExportCsv.onclick = function() {
+            if (scans.length === 0) return alert("No check-ins to export.");
+            const headers = ["Timestamp", "Full Name", "BU", "Team Name", "Status"];
+            const rows = scans.map(function(s) {
+              return [
+                '"' + s.dateTime + '"',
+                '"' + s.fullName.replace(/"/g, '""') + '"',
+                '"' + s.bu.replace(/"/g, '""') + '"',
+                '"' + s.teamName.replace(/"/g, '""') + '"',
+                '"Check-in"'
+              ];
+            });
+            const csv = [headers.join(",")].concat(rows.map(function(r) { return r.join(","); })).join("\\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "IBSI-Team-Fest-EventDay-Checkins-" + new Date().toISOString().slice(0, 10) + ".csv";
+            link.click();
+          };
+        }
+
+        const btnClearHistory = document.getElementById("btnClearHistory");
+        if (btnClearHistory) {
+          btnClearHistory.onclick = function() {
+            if (confirm("Clear local check-in logs for this device?")) {
+              scans = [];
+              localStorage.removeItem(SCANS_KEY);
+              updateScanCounters();
+              renderHistory();
+            }
+          };
+        }
+      } catch (err) {
+        console.warn("History modal setup warning:", err);
+      }
+
+      // ==========================================
+      // MODAL 3: CONNECTION SETTINGS
+      // ==========================================
+      try {
+        const modalSettings = document.getElementById("modalSettings");
+        const settingUrl = document.getElementById("settingUrl");
+        const pingResult = document.getElementById("pingResult");
+        const btnSettings = document.getElementById("btnSettings");
+        const btnCloseSettings = document.getElementById("btnCloseSettings");
+        const btnSaveSetting = document.getElementById("btnSaveSetting");
+        const btnPingTest = document.getElementById("btnPingTest");
+
+        if (btnSettings && modalSettings) {
+          btnSettings.onclick = function() {
+            if (settingUrl) settingUrl.value = localStorage.getItem(URL_KEY) || DEFAULT_URL;
+            if (pingResult) pingResult.classList.add("hidden");
+            modalSettings.classList.remove("hidden");
+          };
+        }
+        if (btnCloseSettings && modalSettings) {
+          btnCloseSettings.onclick = function() { modalSettings.classList.add("hidden"); };
+        }
+        if (btnSaveSetting) {
+          btnSaveSetting.onclick = function() {
+            localStorage.setItem(URL_KEY, settingUrl.value.trim());
+            alert("Google Sheets Web App URL saved successfully!");
+            modalSettings.classList.add("hidden");
+          };
+        }
+        if (btnPingTest && pingResult && settingUrl) {
+          btnPingTest.onclick = async function() {
+            pingResult.classList.remove("hidden");
+            pingResult.textContent = "Testing connection to Google Sheets (EventDay tab)...";
+            const start = Date.now();
+            try {
+              const res = await fetch(settingUrl.value.trim(), {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "validateConnection", ping: "handshake", spreadsheetId: SPREADSHEET_ID, sheetName: SHEET_TAB_NAME })
+              });
+              const latency = Date.now() - start;
+              const text = await res.text();
+              pingResult.innerHTML = "<div class='text-emerald-400 font-bold'>✓ Connected successfully in " + latency + "ms!</div><div class='text-[10px] text-white/70 mt-1'>" + text.slice(0, 150) + "</div>";
+            } catch (err) {
+              pingResult.innerHTML = "<div class='text-rose-400 font-bold'>✕ Handshake failed: " + err.message + "</div>";
+            }
+          };
+        }
+      } catch (err) {
+        console.warn("Settings modal setup warning:", err);
+      }
+
+    })();
+  </script>
+</body>
+</html>

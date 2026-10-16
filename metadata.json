@@ -1,0 +1,8 @@
+{
+  "name": "Remix Committee QR Portal",
+  "description": "A high-performance vendor and committee scanner for reading participant QR codes and recording IBSI Year End Party 2026 check-ins.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

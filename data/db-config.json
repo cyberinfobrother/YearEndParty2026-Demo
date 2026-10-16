@@ -1,0 +1,9 @@
+{
+  "databaseType": "google_sheets",
+  "databaseUrl": "https://script.google.com/macros/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec",
+  "spreadsheetId": "1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs",
+  "sheetName": "EventDay",
+  "apiKey": "",
+  "authHeader": "",
+  "enabled": true
+}

@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@keyframes scanLine {
+  0% {
+    top: 5%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scan-line {
+  animation: scanLine 2.2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 100% Mobile Compatibility Rules */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  background-color: #0d061c;
+  background-image: 
+    linear-gradient(to bottom, rgba(13, 6, 28, 0.82) 0%, rgba(26, 9, 48, 0.65) 45%, rgba(10, 4, 22, 0.92) 100%),
+    url('/ibsi_year_end_bg.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Glassmorphism helpers for IBSI Year End Party Neon Theme */
+.glass-surface {
+  background: rgba(18, 9, 36, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-surface-subtle {
+  background: rgba(15, 7, 30, 0.70);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+}
+
+.glass-scanner-bezel {
+  background: rgba(10, 4, 22, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(236, 72, 153, 0.4);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), inset 0 0 30px rgba(236, 72, 153, 0.08);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* Safe Area Insets for iOS Notch, Dynamic Island, and Home Bar */
+.safe-bottom {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+}
+
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+/* Ensure Camera Viewport fills cleanly on mobile without distortion */
+#reader {
+  width: 100% !important;
+  border: none !important;
+  background: #04091a !important;
+}
+
+#reader video {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 50vh !important;
+  object-fit: cover !important;
+  border-radius: 1rem !important;
+  transform: scale(1.02);
+}
+
+#reader img {
+  display: none !important;
+}
+
+/* Prevent unwanted callout menus or selections on interactive elements */
+button, input, select {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent mobile iOS zoom on input focus by guaranteeing 16px base font size */
+@media screen and (max-width: 640px) {
+  input[type="text"],
+  input[type="url"],
+  input[type="password"],
+  select {
+    font-size: 16px !important;
+  }
+}

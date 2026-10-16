@@ -1,0 +1,10 @@
+{
+  "name": "IBSI Year End Party 2026 Committee QR Portal",
+  "short_name": "IBSI Scanner",
+  "description": "Official committee QR scanner for IBSI Year End Party 2026 check-ins and Google Sheets attendance logging.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#040c1e",
+  "theme_color": "#040c1e",
+  "orientation": "any"
+}

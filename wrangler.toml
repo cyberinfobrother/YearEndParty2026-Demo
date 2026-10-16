@@ -1,0 +1,6 @@
+name = "ibsi-committee-scanner-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+[vars]
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec"
