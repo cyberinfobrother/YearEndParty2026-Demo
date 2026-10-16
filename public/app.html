@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>IBSI Team Fest Committee Scanner</title>
-  <meta name="description" content="Official committee QR scanner for IBSI Team Fest 2026 Event Day check-ins.">
+  <title>IBSI Year End Party 2026 Committee Scanner</title>
+  <meta name="description" content="Official committee QR scanner for IBSI Year End Party 2026 check-ins on Nov 27, 2026 at THE BLUE LEAF McKinley, Taguig City.">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -22,10 +22,10 @@
       padding: 0;
       min-height: 100vh;
       min-height: 100dvh;
-      background-color: #040c1e;
+      background-color: #0d061c;
       background-image: 
-        linear-gradient(to bottom, rgba(4, 12, 30, 0.85) 0%, rgba(6, 18, 42, 0.75) 40%, rgba(4, 12, 30, 0.94) 100%),
-        url('/ibsi_theme_bg.jpg');
+        linear-gradient(to bottom, rgba(13, 6, 28, 0.82) 0%, rgba(26, 9, 48, 0.65) 45%, rgba(10, 4, 22, 0.92) 100%),
+        url('/ibsi_year_end_bg.jpg');
       background-size: cover;
       background-position: center top;
       background-repeat: no-repeat;
@@ -78,16 +78,16 @@
       <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-white/15">
         
         <div class="flex items-center gap-2 text-left">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 via-teal-500 to-orange-500 flex items-center justify-center text-white shadow font-black text-xs shrink-0">
-            🧭
+          <div class="w-8 h-8 rounded-xl overflow-hidden border border-pink-400/50 shadow shrink-0 bg-black/60 p-0.5">
+            <img src="/logo.png" alt="Logo" class="w-full h-full object-cover rounded-lg">
           </div>
           <div>
             <div class="text-[11px] font-black text-white tracking-wider flex items-center gap-1.5 leading-none">
-              <span>IBSI TEAM FEST</span>
-              <span class="text-[9px] font-extrabold text-orange-300 bg-orange-500/20 px-1.5 py-0.2 rounded border border-orange-400/40">2026</span>
+              <span>IBSI YEAR END PARTY</span>
+              <span class="text-[9px] font-extrabold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-400/40">2026</span>
             </div>
-            <div class="text-[9px] text-cyan-300/90 font-medium tracking-wide mt-0.5">
-              One Team • One Voyage • One Champion
+            <div class="text-[9px] text-amber-300/90 font-medium tracking-wide mt-0.5">
+              Celebrate • Connect • Inspire
             </div>
           </div>
         </div>
@@ -113,16 +113,17 @@
 
       <!-- Main Title Header -->
       <div class="my-2 inline-flex flex-col items-center">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 via-orange-500/20 to-teal-500/20 border border-cyan-400/30 text-[10px] font-bold text-cyan-200 uppercase tracking-widest backdrop-blur-md mb-1 shadow-sm">
-          <span>Fifteen Years, One Horizon</span>
-          <span class="text-orange-400">•</span>
-          <span class="text-orange-300">Since 2011</span>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 border border-amber-400/30 text-[10px] font-bold text-amber-200 uppercase tracking-widest backdrop-blur-md mb-1 shadow-sm">
+          <span>🎉</span>
+          <span>Annual Gala & Celebration</span>
+          <span class="text-amber-400">•</span>
+          <span class="text-amber-300">IBSI Year End 2026</span>
         </div>
 
         <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none drop-shadow">
           <span>IBSI </span>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 font-extrabold italic">TEAM FEST </span>
-          <span class="text-cyan-400">2026</span>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-300 to-amber-400 font-extrabold italic">YEAR END PARTY </span>
+          <span class="text-amber-300">2026</span>
         </h1>
 
         <!-- Prominent Committee Scanner Badge -->
@@ -140,9 +141,9 @@
       <!-- Date & Venue info bar -->
       <div class="mt-2 flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-[11px]">
         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/45 border border-white/15 text-white/90">
-          <span class="text-orange-400 font-bold">📅 Oct 10, 2026</span>
+          <span class="text-amber-400 font-bold">📅 Nov 27, 2026</span>
           <span class="text-white/30">•</span>
-          <span class="text-cyan-200">Gameville Central Park, Greenfield, Mandaluyong</span>
+          <span class="text-amber-200">THE BLUE LEAF McKinley, Taguig City</span>
         </div>
         <a href="https://docs.google.com/spreadsheets/d/1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs/edit#gid=0" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-500/40 text-emerald-300 font-mono text-[10px]">
           <span>Sheet [EventDay]</span> ↗
@@ -190,7 +191,7 @@
 
       <!-- Scanner Action Controls -->
       <div class="mt-4 flex flex-col gap-2.5">
-        <button id="btnStartScan" class="w-full py-3.5 px-4 min-h-[48px] rounded-xl font-black text-sm text-white bg-gradient-to-r from-cyan-500 via-teal-500 to-orange-500 hover:from-cyan-400 hover:to-orange-400 active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/50 border border-cyan-300/40 cursor-pointer">
+        <button id="btnStartScan" class="w-full py-3.5 px-4 min-h-[48px] rounded-xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 hover:from-pink-400 hover:to-cyan-400 active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-lg shadow-pink-900/50 border border-pink-300/40 cursor-pointer">
           <span>📷 Start Live Camera Scanner</span>
         </button>
 

@@ -40,9 +40,9 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
       {/* Top Utility Nav - Optimized for mobile touch */}
       <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-white/15">
         {/* Brand identity pill */}
-        <div className="flex items-center gap-2 text-left">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-amber-900/40 font-black text-xs shrink-0">
-            <Sparkles className="w-4 h-4 text-white animate-pulse" />
+        <div className="flex items-center gap-2.5 text-left">
+          <div className="w-9 h-9 rounded-xl overflow-hidden border border-pink-400/50 shadow-md shadow-pink-900/40 shrink-0 bg-black/60 p-0.5 flex items-center justify-center">
+            <img src="/logo.png" alt="IBSI Brand Logo" className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
           </div>
           <div>
             <div className="text-[11px] sm:text-xs font-black text-white tracking-wider flex items-center gap-1.5 leading-none">
