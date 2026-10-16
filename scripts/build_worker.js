@@ -109,7 +109,7 @@ export default {
         });
       }
 
-      // DEFAULT BROWSER VISIT: Serve the FULL, RICH, RESPONSIVE IBSI TEAM FEST WEB APPLICATION!
+      // DEFAULT BROWSER VISIT: Serve the FULL, RICH, MOBILE-FRIENDLY IBSI YEAR END PARTY 2026 WEB APPLICATION!
       return new Response(HTML_APP, {
         status: 200,
         headers: {

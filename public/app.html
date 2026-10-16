@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>IBSI Year End Party 2026 Committee Scanner</title>
   <meta name="description" content="Official committee QR scanner for IBSI Year End Party 2026 check-ins on Nov 27, 2026 at THE BLUE LEAF McKinley, Taguig City.">
+  <meta name="theme-color" content="#0d061c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IBSI Scanner">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -16,6 +24,15 @@
     }
     .animate-scan-line {
       animation: scanLine 2.2s ease-in-out infinite;
+    }
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      height: 100%;
+    }
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
     }
     body {
       margin: 0;
@@ -33,7 +50,8 @@
       color: #ffffff;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       touch-action: pan-y;
-      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      -webkit-font-smoothing: antialiased;
     }
     .glass-card {
       background: rgba(7, 18, 42, 0.78);
@@ -49,26 +67,46 @@
       border: 2px solid rgba(0, 229, 255, 0.4);
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
     }
+    .safe-top {
+      padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
+    }
+    .safe-bottom {
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    }
+    .safe-left {
+      padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    }
+    .safe-right {
+      padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    }
     #reader {
       width: 100% !important;
       border: none !important;
       background: #04091a !important;
+      border-radius: 1rem !important;
+      overflow: hidden !important;
     }
     #reader video {
       width: 100% !important;
       height: 100% !important;
-      max-height: 48vh !important;
+      max-height: 46vh !important;
       object-fit: cover !important;
       border-radius: 1rem !important;
+      transform: scale(1.02);
     }
     #reader img { display: none !important; }
-    input, select, button { touch-action: manipulation; }
+    button, input, select, a {
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+    }
     @media screen and (max-width: 640px) {
-      input, select { font-size: 16px !important; }
+      input[type="text"], input[type="url"], input[type="search"], input[type="password"], select, textarea {
+        font-size: 16px !important;
+      }
     }
   </style>
 </head>
-<body class="p-3 sm:p-5 flex flex-col items-center justify-start pb-10">
+<body class="min-h-[100dvh] w-full text-white flex flex-col items-center justify-start p-3 sm:p-5 safe-top safe-bottom safe-left safe-right font-sans">
 
   <!-- Container -->
   <div class="w-full max-w-xl mx-auto flex flex-col items-center">
@@ -162,27 +200,27 @@
 
         <!-- Laser Reticle (Visible when scanning) -->
         <div id="scanReticle" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden">
-          <div class="relative w-56 h-56 border-2 border-cyan-400/60 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+          <div class="relative w-48 h-48 sm:w-56 sm:h-56 border-2 border-cyan-400/60 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)]">
             <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
             <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
             <div class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
             <div class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-cyan-400 shadow-[0_0_10px_#00E5FF]"></div>
             <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent shadow-[0_0_14px_#00E5FF] animate-scan-line"></div>
           </div>
-          <div class="absolute bottom-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[11px] text-white border border-white/20 flex items-center gap-1.5">
+          <div class="absolute bottom-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[11px] text-white border border-white/20 flex items-center gap-1.5 shadow">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             <span>Align Attendee QR within Frame</span>
           </div>
         </div>
 
         <!-- Idle State View -->
-        <div id="idleView" class="p-6 text-center flex flex-col items-center justify-center gap-3">
-          <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-3xl shadow-inner">
+        <div id="idleView" class="p-5 sm:p-6 text-center flex flex-col items-center justify-center gap-3">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-2xl sm:text-3xl shadow-inner">
             📷
           </div>
           <div>
-            <div class="text-sm font-black text-white uppercase tracking-wider">Ready to Check-in Attendees</div>
-            <div class="text-xs text-[#9BB0D3] mt-1 max-w-xs">
+            <div class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Ready to Check-in Attendees</div>
+            <div class="text-[11px] sm:text-xs text-[#9BB0D3] mt-1 max-w-xs leading-normal">
               Point phone camera at participant QR badge or upload a badge photo to record check-in on <span class="text-cyan-300 font-bold">EventDay</span> tab.
             </div>
           </div>
@@ -190,24 +228,24 @@
       </div>
 
       <!-- Scanner Action Controls -->
-      <div class="mt-4 flex flex-col gap-2.5">
+      <div class="mt-3.5 flex flex-col gap-2">
         <button id="btnStartScan" class="w-full py-3.5 px-4 min-h-[48px] rounded-xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 hover:from-pink-400 hover:to-cyan-400 active:scale-[0.98] transition flex items-center justify-center gap-2 shadow-lg shadow-pink-900/50 border border-pink-300/40 cursor-pointer">
           <span>📷 Start Live Camera Scanner</span>
         </button>
 
         <div id="activeControls" class="hidden flex items-center justify-center gap-2">
-          <button id="btnStopScan" class="flex-1 py-3 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-rose-950/70 hover:bg-rose-900/70 text-rose-300 border border-rose-500/40 transition cursor-pointer">
-            ⏹ Stop Camera
+          <button id="btnStopScan" class="flex-1 py-3 px-3 min-h-[46px] rounded-xl font-bold text-xs bg-rose-950/70 hover:bg-rose-900/70 text-rose-300 border border-rose-500/40 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>⏹ Pause Camera</span>
           </button>
-          <button id="btnFlipCam" class="py-3 px-3 min-h-[44px] rounded-xl font-bold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/20 transition cursor-pointer">
-            🔄 Flip Camera
+          <button id="btnFlipCam" class="py-3 px-3.5 min-h-[46px] rounded-xl font-bold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/20 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🔄 Flip Camera</span>
           </button>
         </div>
 
-        <button id="btnUploadFile" class="w-full py-3 px-4 min-h-[44px] rounded-xl font-bold text-xs text-white backdrop-blur-xl bg-white/10 hover:bg-white/15 border border-white/20 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer">
+        <button id="btnUploadFile" class="w-full py-3 px-4 min-h-[46px] rounded-xl font-bold text-xs sm:text-sm text-white backdrop-blur-xl bg-white/10 hover:bg-white/15 border border-white/20 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
           <span>📁 Take / Upload QR Photo</span>
         </button>
-        <input type="file" id="fileInput" accept="image/*" class="hidden">
+        <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
       </div>
     </main>
 
@@ -343,39 +381,39 @@
   </div>
 
   <!-- Modal: Scans History -->
-  <div id="modalHistory" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md hidden">
-    <div class="w-full max-w-xl bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5 text-white shadow-2xl flex flex-col max-h-[85vh]">
+  <div id="modalHistory" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-md hidden">
+    <div class="w-full max-w-xl bg-[#0F172A] border border-[#1E293B] rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 text-white shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] safe-bottom">
       <div class="flex items-center justify-between pb-3 border-b border-[#1E293B]">
         <div>
-          <h3 class="font-bold text-sm text-white">Check-in History (EventDay Tab)</h3>
+          <h3 class="font-bold text-sm text-white">IBSI Year End Party 2026 Check-in Logs</h3>
           <p id="historySummary" class="text-[11px] text-[#8E9BB5]">0 attendees recorded</p>
         </div>
-        <button id="btnCloseHistory" class="text-[#8E9BB5] hover:text-white text-lg p-1">✕</button>
+        <button id="btnCloseHistory" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-[#8E9BB5] hover:text-white flex items-center justify-center text-lg active:scale-95 transition">✕</button>
       </div>
       <div class="py-3 flex items-center justify-between gap-2 border-b border-[#1E293B]">
-        <input type="text" id="historySearch" placeholder="Search by name, BU, or team..." class="flex-1 px-3 py-1.5 bg-[#070B14] border border-[#1E293B] rounded-lg text-xs text-white">
-        <button id="btnExportCsv" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition cursor-pointer">
+        <input type="text" id="historySearch" placeholder="Search by name, BU, or team..." class="flex-1 px-3 py-2 bg-[#070B14] border border-[#1E293B] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-cyan-400">
+        <button id="btnExportCsv" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">
           Export CSV
         </button>
-        <button id="btnClearHistory" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-800/40 text-rose-300 rounded-lg text-xs font-bold transition cursor-pointer">
+        <button id="btnClearHistory" class="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800/40 text-rose-300 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">
           Clear
         </button>
       </div>
-      <div id="historyList" class="flex-1 overflow-y-auto my-3 space-y-2 text-xs"></div>
+      <div id="historyList" class="flex-1 overflow-y-auto my-3 space-y-2 text-xs" style="-webkit-overflow-scrolling: touch;"></div>
     </div>
   </div>
 
   <!-- Modal: Connection Settings -->
-  <div id="modalSettings" class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md hidden">
-    <div class="w-full max-w-lg bg-[#0F172A] border border-[#1E293B] rounded-2xl p-5 text-white shadow-2xl flex flex-col max-h-[85vh]">
+  <div id="modalSettings" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-md hidden">
+    <div class="w-full max-w-lg bg-[#0F172A] border border-[#1E293B] rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 text-white shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] safe-bottom">
       <div class="flex items-center justify-between pb-3 border-b border-[#1E293B]">
         <div>
           <h3 class="font-bold text-sm text-white">Google Sheets Integration Settings</h3>
           <p class="text-[11px] text-[#8E9BB5]">Target Sheet: <span class="font-mono text-cyan-300">1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs</span></p>
         </div>
-        <button id="btnCloseSettings" class="text-[#8E9BB5] hover:text-white text-lg p-1">✕</button>
+        <button id="btnCloseSettings" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-[#8E9BB5] hover:text-white flex items-center justify-center text-lg active:scale-95 transition">✕</button>
       </div>
-      <div class="py-4 space-y-3 text-xs">
+      <div class="py-4 space-y-3 text-xs overflow-y-auto" style="-webkit-overflow-scrolling: touch;">
         <div class="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl space-y-1">
           <div class="font-bold text-emerald-300">Target Tab: EventDay</div>
           <div class="text-[11px] text-[#BACAE5]">
@@ -384,13 +422,13 @@
         </div>
         <div>
           <label class="block text-[11px] font-bold text-white mb-1">Google Apps Script Web App URL</label>
-          <input type="text" id="settingUrl" value="https://script.google.com/a/macros/ibs.com.ph/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec" class="w-full px-3 py-2 bg-[#091122] border border-[#232F4C] rounded-xl text-xs font-mono text-white">
+          <input type="text" id="settingUrl" value="https://script.google.com/a/macros/ibs.com.ph/s/AKfycbwjEbCcwwDRklQLF0L2Dymz8U9afSdZm3RlVMyULlxBK1YfV5TmHxZdYnCUsp6_xXjA/exec" class="w-full px-3 py-2 bg-[#091122] border border-[#232F4C] rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-cyan-400">
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnSaveSetting" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition cursor-pointer">
+          <button id="btnSaveSetting" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition active:scale-95 cursor-pointer">
             Save URL
           </button>
-          <button id="btnPingTest" class="py-2 px-4 bg-[#1E293B] hover:bg-[#2B3B54] text-white font-bold rounded-xl transition cursor-pointer">
+          <button id="btnPingTest" class="py-2.5 px-4 bg-[#1E293B] hover:bg-[#2B3B54] text-white font-bold rounded-xl transition active:scale-95 cursor-pointer">
             Ping Handshake
           </button>
         </div>
@@ -553,7 +591,18 @@
           }
           await html5QrCode.start(
             { facingMode: currentCameraFacing },
-            { fps: 15, qrbox: { width: 250, height: 250 } },
+            {
+              fps: 15,
+              qrbox: function(viewfinderWidth, viewfinderHeight) {
+                var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                var size = Math.floor(minEdge * 0.72);
+                return {
+                  width: Math.max(180, Math.min(260, size)),
+                  height: Math.max(180, Math.min(260, size))
+                };
+              },
+              aspectRatio: 1.0
+            },
             function(decodedText) { onQrScanned(decodedText); },
             function() {}
           );
@@ -734,7 +783,7 @@
         const scriptUrl = localStorage.getItem(URL_KEY) || DEFAULT_URL;
         const payload = {
           action: "ibsi_checkin",
-          event: "TEAM_FEST_CHECKIN",
+          event: "IBSI_YEP2026_CHECKIN",
           spreadsheetId: SPREADSHEET_ID,
           sheetName: SHEET_TAB_NAME,
           timestamp: timestampStr,
@@ -913,7 +962,7 @@
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "IBSI-Team-Fest-EventDay-Checkins-" + new Date().toISOString().slice(0, 10) + ".csv";
+            link.download = "IBSI-Year-End-Party-2026-Checkins-" + new Date().toISOString().slice(0, 10) + ".csv";
             link.click();
           };
         }

@@ -107,11 +107,19 @@ body {
 
 /* Safe Area Insets for iOS Notch, Dynamic Island, and Home Bar */
 .safe-bottom {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 
 .safe-top {
-  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+  padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-left {
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+}
+
+.safe-right {
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
 }
 
 /* Ensure Camera Viewport fills cleanly on mobile without distortion */
@@ -119,12 +127,14 @@ body {
   width: 100% !important;
   border: none !important;
   background: #04091a !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
 }
 
 #reader video {
   width: 100% !important;
   height: 100% !important;
-  max-height: 50vh !important;
+  max-height: 46vh !important;
   object-fit: cover !important;
   border-radius: 1rem !important;
   transform: scale(1.02);

@@ -148,7 +148,7 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
           <span className="font-semibold text-white">Nov 27, 2026</span>
           <span className="text-white/30">•</span>
           <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
-          <span className="text-amber-200 font-medium truncate max-w-[210px] sm:max-w-none">
+          <span className="text-amber-200 font-medium max-w-[270px] xs:max-w-none">
             THE BLUE LEAF McKinley, Taguig City
           </span>
         </div>

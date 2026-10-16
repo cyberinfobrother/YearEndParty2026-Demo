@@ -315,7 +315,7 @@ export default function App() {
   const sheetsUrl = `https://docs.google.com/spreadsheets/d/${IBSI_SPREADSHEET_ID}/edit#gid=0`;
 
   return (
-    <div className="min-h-[100dvh] w-full text-white flex flex-col items-center justify-start p-3 sm:p-6 pb-8 safe-bottom safe-top selection:bg-emerald-400 selection:text-black font-sans">
+    <div className="min-h-[100dvh] w-full text-white flex flex-col items-center justify-start p-3 sm:p-6 pb-8 safe-bottom safe-top safe-left safe-right selection:bg-emerald-400 selection:text-black font-sans">
       <div className="w-full max-w-xl mx-auto flex flex-col items-center">
         {/* Header Bar */}
         <StationHeader
