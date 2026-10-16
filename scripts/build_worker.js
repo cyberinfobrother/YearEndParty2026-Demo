@@ -1,25 +1,44 @@
 import fs from 'fs';
 import path from 'path';
 
-const bgBase64Path = path.join(process.cwd(), 'public', 'bg_base64.txt');
-const bgBase64 = fs.existsSync(bgBase64Path)
-  ? fs.readFileSync(bgBase64Path, 'utf-8').trim()
-  : '';
+// 1. Load optimized background image as Base64
+const bgPath = path.join(process.cwd(), 'public', 'ibsi_year_end_bg_worker.jpg');
+const bgBase64 = fs.existsSync(bgPath)
+  ? fs.readFileSync(bgPath).toString('base64')
+  : fs.readFileSync(path.join(process.cwd(), 'public', 'ibsi_year_end_bg.jpg')).toString('base64');
 
 console.log(`Loaded background base64 image: ${bgBase64.length} characters.`);
+
+// 2. Load optimized nautical wheel logo as Base64
+const logoPath = path.join(process.cwd(), 'public', 'logo_worker.png');
+const logoBase64 = fs.existsSync(logoPath)
+  ? fs.readFileSync(logoPath).toString('base64')
+  : fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png')).toString('base64');
+
+console.log(`Loaded logo base64 image: ${logoBase64.length} characters.`);
 
 const htmlPath = path.join(process.cwd(), 'public', 'app.html');
 let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
 
 // Replace background image URL with base64 data URI
 htmlContent = htmlContent.replace(
+  "url('/ibsi_year_end_bg.jpg')",
+  `url('data:image/jpeg;base64,${bgBase64}')`
+);
+htmlContent = htmlContent.replace(
   "url('/ibsi_theme_bg.jpg')",
   `url('data:image/jpeg;base64,${bgBase64}')`
 );
 
+// Replace logo image URL with base64 data URI
+htmlContent = htmlContent.replace(
+  'src="/logo.png"',
+  `src="data:image/png;base64,${logoBase64}"`
+);
+
 const workerCode = `/**
  * ============================================================================
- * IBSI TEAM FEST 2026 - COMMITTEE SCANNER (CLOUDFLARE WORKER FULL-STACK APP)
+ * IBSI YEAR END PARTY 2026 - COMMITTEE SCANNER (CLOUDFLARE WORKER FULL-STACK APP)
  * Target Spreadsheet ID: 1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs
  * Target Sheet Tab: EventDay
  * Logged Columns: Timestamp | Full Name | BU | Team Name | Status (Green Highlight)
@@ -81,7 +100,7 @@ export default {
       ) {
         return jsonResponse({
           status: 'ONLINE',
-          service: 'IBSI Team Fest Committee Scanner Proxy Worker',
+          service: 'IBSI Year End Party 2026 Committee Scanner Proxy Worker',
           timestamp: new Date().toISOString(),
           googleScriptConfigured: Boolean(googleScriptUrl),
           spreadsheetId: IBSI_SPREADSHEET_ID,
