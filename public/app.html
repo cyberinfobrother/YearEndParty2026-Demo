@@ -664,9 +664,12 @@
         };
       }
 
-      // Parser for QR badge formats
+      // Parser for QR badge formats (JSON, multi-line key-value, comma/pipe, URL)
       function parseQr(raw) {
         let text = (raw || "").trim();
+        if (!text) {
+          return { fullName: "Participant", bu: "Technology & Digital", teamName: "IBSI Team", employeeId: "" };
+        }
 
         // 0. Base64 decode check (handles createSecureQRPayload_ from QRService.gs)
         if (!text.startsWith("{") && !text.startsWith("http") && text.length > 12 && !text.includes(" ")) {
@@ -678,27 +681,146 @@
           } catch(e) {}
         }
 
+        // 1. JSON format check
         if (text.startsWith("{") && text.endsWith("}")) {
           try {
             const obj = JSON.parse(text);
             return {
-              fullName: obj.fullName || obj.name || obj["Full Name"] || "Attendee",
-              bu: obj.bu || obj.businessUnit || obj.department || "Technology",
-              teamName: obj.teamName || obj.team || "IBSI Team",
-              employeeId: obj.employeeId || obj.employeeID || ""
+              fullName: obj.fullName || obj.FullName || obj["Full Name"] || obj.name || obj.Name || obj.participant || "Attendee",
+              bu: obj.bu || obj.BU || obj.businessUnit || obj["Business Unit"] || obj.department || obj.dept || "Technology & Digital",
+              teamName: obj.teamName || obj.TeamName || obj["Team Name"] || obj.team || obj.Team || obj.group || "IBSI Team",
+              employeeId: obj.employeeId || obj.employeeID || obj.id || ""
             };
           } catch(e) {}
         }
-        const delims = [",", "|", ";", "\\n", "/"];
+
+        // 2. Multi-line Key-Value parser (Handles:
+        //    IBSI YEP 2026
+        //    Full Name: REYNALDO AGUILAR JR
+        //    Business Unit: IT Delivery - Cybersecurity
+        //    Team: Peridot)
+        const lines = text.split(/\r?\n|\\n/);
+        let parsedName = "";
+        let parsedBu = "";
+        let parsedTeam = "";
+        let parsedEmpId = "";
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          const colonIdx = line.indexOf(":");
+          if (colonIdx !== -1) {
+            const rawKey = line.slice(0, colonIdx).trim().toLowerCase();
+            const rawVal = line.slice(colonIdx + 1).trim();
+
+            if (
+              rawKey === "full name" ||
+              rawKey === "fullname" ||
+              rawKey === "name" ||
+              rawKey === "attendee" ||
+              rawKey === "participant" ||
+              (rawKey.includes("name") && !rawKey.includes("team") && !rawKey.includes("company"))
+            ) {
+              if (rawVal) parsedName = rawVal;
+            } else if (
+              rawKey === "business unit" ||
+              rawKey === "businessunit" ||
+              rawKey === "bu" ||
+              rawKey === "department" ||
+              rawKey === "dept" ||
+              rawKey === "division" ||
+              rawKey === "office" ||
+              rawKey.includes("business") ||
+              rawKey.includes("unit")
+            ) {
+              if (rawVal) parsedBu = rawVal;
+            } else if (
+              rawKey === "team" ||
+              rawKey === "team name" ||
+              rawKey === "teamname" ||
+              rawKey === "group" ||
+              rawKey === "house" ||
+              rawKey.includes("team")
+            ) {
+              if (rawVal) parsedTeam = rawVal;
+            } else if (
+              rawKey === "employee id" ||
+              rawKey === "employeeid" ||
+              rawKey === "id" ||
+              rawKey === "badge" ||
+              rawKey.includes("id")
+            ) {
+              if (rawVal) parsedEmpId = rawVal;
+            }
+          }
+        }
+
+        if (parsedName) {
+          return {
+            fullName: parsedName,
+            bu: parsedBu || "Technology & Digital",
+            teamName: parsedTeam || "IBSI Team",
+            employeeId: parsedEmpId || ""
+          };
+        }
+
+        // 3. Positional multi-line fallback (ignoring event titles like "IBSI YEP 2026")
+        const nonHeaderLines = lines
+          .map(function(l) { return l.trim(); })
+          .filter(function(l) {
+            if (!l) return false;
+            const lower = l.toLowerCase();
+            if (lower.startsWith("ibsi yep") || lower.startsWith("ibsi year end") || lower.startsWith("year end party")) return false;
+            return true;
+          });
+
+        if (nonHeaderLines.length >= 3) {
+          return {
+            fullName: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim(),
+            bu: nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim(),
+            teamName: nonHeaderLines[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, "").trim(),
+            employeeId: ""
+          };
+        } else if (nonHeaderLines.length === 2) {
+          return {
+            fullName: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim(),
+            bu: nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim(),
+            teamName: "IBSI Team",
+            employeeId: ""
+          };
+        }
+
+        // 4. Delimited text (comma, pipe, semicolon, slash)
+        const delims = [",", "|", ";", "/"];
         for (let i = 0; i < delims.length; i++) {
           const delim = delims[i];
           if (text.includes(delim)) {
             const parts = text.split(delim).map(function(s) { return s.trim(); }).filter(Boolean);
-            if (parts.length >= 3) return { fullName: parts[0], bu: parts[1], teamName: parts[2], employeeId: "" };
-            if (parts.length === 2) return { fullName: parts[0], bu: parts[1], teamName: "IBSI Team", employeeId: "" };
+            if (parts.length >= 3) {
+              return {
+                fullName: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim(),
+                bu: parts[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim(),
+                teamName: parts[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, "").trim(),
+                employeeId: ""
+              };
+            }
+            if (parts.length === 2) {
+              return {
+                fullName: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim(),
+                bu: parts[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim(),
+                teamName: "IBSI Team",
+                employeeId: ""
+              };
+            }
           }
         }
-        return { fullName: text || "Participant", bu: "Technology & Digital", teamName: "IBSI Team", employeeId: "" };
+
+        // 5. Fallback clean text
+        let cleanText = text;
+        if (/^ibsi\s+yep/i.test(cleanText)) {
+          cleanText = cleanText.replace(/^ibsi\s+yep[^\n]*\n?/i, "").trim();
+        }
+        return { fullName: cleanText || "Participant", bu: "Technology & Digital", teamName: "IBSI Team", employeeId: "" };
       }
 
       // Check-in Processing

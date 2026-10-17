@@ -182,63 +182,122 @@ export function parseQrData(rawInput: string): {
     } catch (_) {}
   }
 
-  // 3. Try Key-Value lines (e.g., Name: John \n BU: IT \n Team: Blue)
-  if (clean.includes(':') && (clean.includes('\n') || clean.includes(';') || clean.includes(','))) {
-    const lines = clean.split(/[\n;,]+/);
-    let parsedName = '';
-    let parsedBu = '';
-    let parsedTeam = '';
+  // 3. Try Multi-line Key-Value lines (e.g., Full Name: REYNALDO AGUILAR JR \n Business Unit: IT Delivery - Cybersecurity \n Team: Peridot)
+  const lines = clean.split(/\r?\n|\\n/);
+  let parsedName = '';
+  let parsedBu = '';
+  let parsedTeam = '';
 
-    for (const line of lines) {
-      const parts = line.split(':');
-      if (parts.length >= 2) {
-        const key = parts[0].trim().toLowerCase();
-        const val = parts.slice(1).join(':').trim();
-        if (key.includes('name') && !key.includes('team')) parsedName = val;
-        else if (key === 'bu' || key.includes('unit') || key.includes('dept') || key.includes('office')) parsedBu = val;
-        else if (key.includes('team') || key.includes('group')) parsedTeam = val;
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const colonIdx = line.indexOf(':');
+    if (colonIdx !== -1) {
+      const rawKey = line.slice(0, colonIdx).trim().toLowerCase();
+      const rawVal = line.slice(colonIdx + 1).trim();
+
+      if (
+        rawKey === 'full name' ||
+        rawKey === 'fullname' ||
+        rawKey === 'name' ||
+        rawKey === 'attendee' ||
+        rawKey === 'participant' ||
+        (rawKey.includes('name') && !rawKey.includes('team') && !rawKey.includes('company'))
+      ) {
+        if (rawVal) parsedName = rawVal;
+      } else if (
+        rawKey === 'business unit' ||
+        rawKey === 'businessunit' ||
+        rawKey === 'bu' ||
+        rawKey === 'department' ||
+        rawKey === 'dept' ||
+        rawKey === 'division' ||
+        rawKey === 'office' ||
+        rawKey.includes('business') ||
+        rawKey.includes('unit')
+      ) {
+        if (rawVal) parsedBu = rawVal;
+      } else if (
+        rawKey === 'team' ||
+        rawKey === 'team name' ||
+        rawKey === 'teamname' ||
+        rawKey === 'group' ||
+        rawKey === 'house' ||
+        rawKey.includes('team')
+      ) {
+        if (rawVal) parsedTeam = rawVal;
       }
-    }
-
-    if (parsedName) {
-      return {
-        fullName: parsedName,
-        bu: parsedBu || 'Technology',
-        teamName: parsedTeam || 'IBSI Team',
-        token: parsedName,
-      };
     }
   }
 
-  // 4. Try Delimited text (e.g., "John Doe, IT, Blue Dragons" or "John Doe | IT | Blue Dragons")
-  const delimiters = [',', '|', ';', '\n', '/'];
+  if (parsedName) {
+    return {
+      fullName: parsedName,
+      bu: parsedBu || 'Technology & Digital',
+      teamName: parsedTeam || 'IBSI Team',
+      token: parsedName,
+    };
+  }
+
+  // 4. Positional multi-line fallback (ignoring event titles like "IBSI YEP 2026")
+  const nonHeaderLines = lines
+    .map((l) => l.trim())
+    .filter((l) => {
+      if (!l) return false;
+      const lower = l.toLowerCase();
+      if (lower.startsWith('ibsi yep') || lower.startsWith('ibsi year end') || lower.startsWith('year end party')) return false;
+      return true;
+    });
+
+  if (nonHeaderLines.length >= 3) {
+    return {
+      fullName: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+      bu: nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim(),
+      teamName: nonHeaderLines[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, '').trim(),
+      token: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+    };
+  } else if (nonHeaderLines.length === 2) {
+    return {
+      fullName: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+      bu: nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim(),
+      teamName: 'IBSI Team',
+      token: nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+    };
+  }
+
+  // 5. Try Delimited text (e.g., "John Doe, IT, Blue Dragons" or "John Doe | IT | Blue Dragons")
+  const delimiters = [',', '|', ';', '/'];
   for (const delim of delimiters) {
     if (clean.includes(delim)) {
       const parts = clean.split(delim).map((p) => p.trim()).filter(Boolean);
       if (parts.length >= 3) {
         return {
-          fullName: parts[0],
-          bu: parts[1],
-          teamName: parts[2],
-          token: parts[0],
+          fullName: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+          bu: parts[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim(),
+          teamName: parts[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, '').trim(),
+          token: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
         };
       } else if (parts.length === 2) {
         return {
-          fullName: parts[0],
-          bu: parts[1],
+          fullName: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
+          bu: parts[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim(),
           teamName: 'IBSI Team',
-          token: parts[0],
+          token: parts[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim(),
         };
       }
     }
   }
 
-  // 5. Fallback: single name or token
+  // 6. Fallback: single name or token
+  let cleanFallback = clean;
+  if (/^ibsi\s+yep/i.test(cleanFallback)) {
+    cleanFallback = cleanFallback.replace(/^ibsi\s+yep[^\n]*\n?/i, '').trim();
+  }
   return {
-    fullName: clean,
-    bu: 'Technology',
+    fullName: cleanFallback || 'Participant',
+    bu: 'Technology & Digital',
     teamName: 'IBSI Team',
-    token: clean,
+    token: cleanFallback || 'Participant',
   };
 }
 

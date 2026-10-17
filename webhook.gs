@@ -165,12 +165,16 @@ function logCheckIn(ss, sheet, data) {
   var teamName = String(data.teamName || data.team || "IBSI Team").trim();
   var status = "Check-in";
 
-  // Parse raw QR if fullName was not provided directly
-  if (!fullName && (data.rawQrData || data.token || data.raw || data.qrPayload)) {
-    var raw = String(data.rawQrData || data.token || data.raw || data.qrPayload).trim();
+  // Parse QR badge fields if fullName contains multi-line text/colons or if only raw data was provided
+  var sourceText = (fullName.indexOf("\n") !== -1 || fullName.indexOf(":") !== -1)
+    ? fullName
+    : (data.rawQrData || data.token || data.raw || data.qrPayload ? String(data.rawQrData || data.token || data.raw || data.qrPayload).trim() : "");
+
+  if (sourceText) {
+    var raw = sourceText;
 
     // 0. Base64 decode check (handles createSecureQRPayload_ from QRService.gs)
-    if (!raw.startsWith("{") && !raw.startsWith("http") && raw.length > 12 && !raw.includes(" ")) {
+    if (!raw.startsWith("{") && !raw.startsWith("http") && raw.length > 12 && raw.indexOf(" ") === -1) {
       try {
         var decodedBytes = Utilities.base64Decode(raw);
         var decodedStr = Utilities.newBlob(decodedBytes).getDataAsString();
@@ -180,22 +184,87 @@ function logCheckIn(ss, sheet, data) {
       } catch (b64Err) {}
     }
 
+    // 1. JSON parsing
     if (raw.startsWith("{") && raw.endsWith("}")) {
       try {
         var obj = JSON.parse(raw);
-        fullName = obj.fullName || obj.name || obj["Full Name"] || "";
-        bu = obj.bu || obj.businessUnit || obj.department || bu;
-        teamName = obj.teamName || obj.team || obj["TEAM NAME"] || teamName;
+        fullName = obj.fullName || obj.FullName || obj["Full Name"] || obj.name || obj.Name || "";
+        bu = obj.bu || obj.BU || obj.businessUnit || obj["Business Unit"] || obj.department || bu;
+        teamName = obj.teamName || obj.TeamName || obj["Team Name"] || obj.team || obj.Team || teamName;
       } catch(_) {}
     }
-    if (!fullName) {
-      var parts = raw.split(/[,|;\n\/]+/);
-      if (parts.length >= 2) {
-        fullName = parts[0].trim();
-        bu = parts[1].trim();
-        if (parts.length >= 3) teamName = parts[2].trim();
-      } else {
-        fullName = raw;
+
+    // 2. Multi-line Key-Value parsing (Handles Full Name:, Business Unit:, Team:)
+    var lines = raw.split(/\r?\n|\\n/);
+    var parsedName = "";
+    var parsedBu = "";
+    var parsedTeam = "";
+
+    for (var l = 0; l < lines.length; l++) {
+      var line = lines[l].trim();
+      var colonIdx = line.indexOf(":");
+      if (colonIdx !== -1) {
+        var k = line.substring(0, colonIdx).trim().toLowerCase();
+        var v = line.substring(colonIdx + 1).trim();
+
+        if (
+          k === "full name" ||
+          k === "fullname" ||
+          k === "name" ||
+          k === "attendee" ||
+          k === "participant" ||
+          (k.indexOf("name") !== -1 && k.indexOf("team") === -1 && k.indexOf("company") === -1)
+        ) {
+          if (v) parsedName = v;
+        } else if (
+          k === "business unit" ||
+          k === "businessunit" ||
+          k === "bu" ||
+          k === "department" ||
+          k === "dept" ||
+          k === "division" ||
+          k === "office" ||
+          k.indexOf("business") !== -1 ||
+          k.indexOf("unit") !== -1
+        ) {
+          if (v) parsedBu = v;
+        } else if (
+          k === "team" ||
+          k === "team name" ||
+          k === "teamname" ||
+          k === "group" ||
+          k === "house" ||
+          k.indexOf("team") !== -1
+        ) {
+          if (v) parsedTeam = v;
+        }
+      }
+    }
+
+    if (parsedName) {
+      fullName = parsedName;
+      if (parsedBu) bu = parsedBu;
+      if (parsedTeam) teamName = parsedTeam;
+    } else if (!fullName || fullName.indexOf("\n") !== -1) {
+      // 3. Positional fallback filtering out event titles like "IBSI YEP 2026"
+      var nonHeaders = [];
+      for (var j = 0; j < lines.length; j++) {
+        var trimmed = lines[j].trim();
+        var lower = trimmed.toLowerCase();
+        if (lower && lower.indexOf("ibsi yep") !== 0 && lower.indexOf("ibsi year end") !== 0 && lower.indexOf("year end party") !== 0) {
+          nonHeaders.push(trimmed);
+        }
+      }
+
+      if (nonHeaders.length >= 3) {
+        fullName = nonHeaders[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim();
+        bu = nonHeaders[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim();
+        teamName = nonHeaders[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, "").trim();
+      } else if (nonHeaders.length === 2) {
+        fullName = nonHeaders[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim();
+        bu = nonHeaders[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, "").trim();
+      } else if (nonHeaders.length === 1) {
+        fullName = nonHeaders[0].replace(/^full\s*name\s*[:=-]\s*/i, "").trim();
       }
     }
   }

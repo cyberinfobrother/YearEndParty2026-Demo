@@ -256,58 +256,114 @@ function parseParticipantData(body: any) {
     } catch (_) {}
   }
 
-  if (!fullName && rawQrData) {
-    // 1. Try URL parsing
-    if (rawQrData.startsWith('http://') || rawQrData.startsWith('https://')) {
-      try {
-        const u = new URL(rawQrData);
-        fullName = u.searchParams.get('fullName') || u.searchParams.get('name') || '';
-        bu = u.searchParams.get('bu') || u.searchParams.get('dept') || '';
-        teamName = u.searchParams.get('teamName') || u.searchParams.get('team') || '';
-      } catch (_) {}
-    }
+  // Check if fullName itself or rawQrData contains multi-line or colon format
+  const sourceText = (fullName.includes('\n') || fullName.includes(':'))
+    ? fullName
+    : (rawQrData || fullName);
 
-    // 2. Try JSON parsing
-    if (!fullName && rawQrData.startsWith('{') && rawQrData.endsWith('}')) {
-      try {
-        const parsed = JSON.parse(rawQrData);
-        fullName = parsed.fullName || parsed.name || parsed['Full Name'] || '';
-        bu = parsed.bu || parsed.BU || parsed.businessUnit || parsed.department || parsed.office || '';
-        teamName = parsed.teamName || parsed.team || parsed['Team Name'] || '';
-      } catch (_) {}
-    }
+  // 1. Try URL parsing
+  if (sourceText.startsWith('http://') || sourceText.startsWith('https://')) {
+    try {
+      const u = new URL(sourceText);
+      fullName = u.searchParams.get('fullName') || u.searchParams.get('name') || fullName;
+      bu = u.searchParams.get('bu') || u.searchParams.get('dept') || bu;
+      teamName = u.searchParams.get('teamName') || u.searchParams.get('team') || teamName;
+    } catch (_) {}
+  }
 
-    // 3. Try Delimited parsing (e.g. "Full Name, BU, Team Name")
-    if (!fullName) {
-      for (const delim of [',', '|', ';', '\n', '/']) {
-        if (rawQrData.includes(delim)) {
-          const parts = rawQrData.split(delim).map((s: string) => s.trim()).filter(Boolean);
-          if (parts.length >= 3) {
-            fullName = parts[0];
-            bu = parts[1];
-            teamName = parts[2];
-            break;
-          } else if (parts.length === 2) {
-            fullName = parts[0];
-            bu = parts[1];
-            teamName = 'IBSI Team';
-            break;
-          }
-        }
+  // 2. Try JSON parsing
+  if (sourceText.startsWith('{') && sourceText.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(sourceText);
+      fullName = parsed.fullName || parsed.name || parsed['Full Name'] || fullName;
+      bu = parsed.bu || parsed.BU || parsed.businessUnit || parsed.department || parsed.office || bu;
+      teamName = parsed.teamName || parsed.team || parsed['Team Name'] || teamName;
+    } catch (_) {}
+  }
+
+  // 3. Try Multi-line Key-Value lines (Handles Full Name:, Business Unit:, Team:)
+  const lines = sourceText.split(/\r?\n|\\n/);
+  let parsedName = '';
+  let parsedBu = '';
+  let parsedTeam = '';
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const colonIdx = line.indexOf(':');
+    if (colonIdx !== -1) {
+      const k = line.slice(0, colonIdx).trim().toLowerCase();
+      const v = line.slice(colonIdx + 1).trim();
+
+      if (
+        k === 'full name' ||
+        k === 'fullname' ||
+        k === 'name' ||
+        k === 'attendee' ||
+        k === 'participant' ||
+        (k.includes('name') && !k.includes('team') && !k.includes('company'))
+      ) {
+        if (v) parsedName = v;
+      } else if (
+        k === 'business unit' ||
+        k === 'businessunit' ||
+        k === 'bu' ||
+        k === 'department' ||
+        k === 'dept' ||
+        k === 'division' ||
+        k === 'office' ||
+        k.includes('business') ||
+        k.includes('unit')
+      ) {
+        if (v) parsedBu = v;
+      } else if (
+        k === 'team' ||
+        k === 'team name' ||
+        k === 'teamname' ||
+        k === 'group' ||
+        k === 'house' ||
+        k.includes('team')
+      ) {
+        if (v) parsedTeam = v;
       }
     }
+  }
 
-    // 4. Fallback to raw text
-    if (!fullName) {
-      fullName = rawQrData;
+  if (parsedName) {
+    fullName = parsedName;
+    bu = parsedBu || bu || 'Technology & Digital';
+    teamName = parsedTeam || teamName || 'IBSI Team';
+  } else if (!fullName || fullName.includes('\n')) {
+    // 4. Positional fallback filtering out event titles like "IBSI YEP 2026"
+    const nonHeaderLines = lines
+      .map((l) => l.trim())
+      .filter((l) => {
+        if (!l) return false;
+        const lower = l.toLowerCase();
+        if (lower.startsWith('ibsi yep') || lower.startsWith('ibsi year end') || lower.startsWith('year end party')) return false;
+        return true;
+      });
+
+    if (nonHeaderLines.length >= 3) {
+      fullName = nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim();
+      bu = nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim();
+      teamName = nonHeaderLines[2].replace(/^(team\s*name|team)\s*[:=-]\s*/i, '').trim();
+    } else if (nonHeaderLines.length === 2) {
+      fullName = nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim();
+      bu = nonHeaderLines[1].replace(/^(business\s*unit|bu|dept|department)\s*[:=-]\s*/i, '').trim();
+      teamName = teamName || 'IBSI Team';
+    } else if (nonHeaderLines.length === 1) {
+      fullName = nonHeaderLines[0].replace(/^full\s*name\s*[:=-]\s*/i, '').trim();
+    } else {
+      fullName = sourceText.replace(/^ibsi\s+yep[^\n]*\n?/i, '').trim();
     }
   }
 
   return {
     fullName: fullName || 'Participant',
-    bu: bu || 'Technology',
+    bu: bu || 'Technology & Digital',
     teamName: teamName || 'IBSI Team',
-    token: rawQrData || fullName,
+    token: fullName || rawQrData || 'Participant',
   };
 }
 

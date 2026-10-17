@@ -174,7 +174,28 @@ export default {
         });
       }
 
-      const attendeeName = (requestData.fullName || requestData.name || '').trim().toLowerCase();
+      let extractedName = (requestData.fullName || requestData.name || '').trim();
+      let extractedBu = (requestData.bu || requestData.businessUnit || '').trim();
+      let extractedTeam = (requestData.teamName || requestData.team || '').trim();
+
+      // Guard against unparsed multi-line or labeled QR payload in worker API
+      if (extractedName.indexOf(String.fromCharCode(10)) !== -1 || extractedName.includes(':') || (!extractedName && requestData.rawQrData)) {
+        const textToParse = extractedName || requestData.rawQrData || '';
+        const rawLines = textToParse.split(/[\\r\\n]+/);
+        for (let i = 0; i < rawLines.length; i++) {
+          const line = rawLines[i].trim();
+          const colonIdx = line.indexOf(':');
+          if (colonIdx !== -1) {
+            const k = line.slice(0, colonIdx).trim().toLowerCase();
+            const v = line.slice(colonIdx + 1).trim();
+            if (k.includes('name') && !k.includes('team')) extractedName = v;
+            else if (k.includes('unit') || k === 'bu' || k.includes('dept')) extractedBu = v;
+            else if (k.includes('team') || k.includes('group')) extractedTeam = v;
+          }
+        }
+      }
+
+      const attendeeName = (extractedName || 'Participant').toLowerCase();
       const nowMs = Date.now();
       const lastScanTime = recentScans.get(attendeeName);
       if (attendeeName && lastScanTime && (nowMs - lastScanTime < 10000)) {
@@ -202,9 +223,9 @@ export default {
             spreadsheetId: IBSI_SPREADSHEET_ID,
             sheetName: IBSI_SHEET_TAB_NAME,
             timestamp: requestData.timestamp || new Date().toISOString(),
-            fullName: requestData.fullName || requestData.name || 'Participant',
-            bu: requestData.bu || requestData.businessUnit || 'Technology',
-            teamName: requestData.teamName || requestData.team || 'IBSI Team',
+            fullName: extractedName || 'Participant',
+            bu: extractedBu || 'Technology & Digital',
+            teamName: extractedTeam || 'IBSI Team',
             status: 'Check-in',
             highlightColor: '#4ade80',
           }),

@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan to parse multi-line labeled QR codes (Full Name:, Business Unit:, Team:) into separate, dedicated columns across public/app.html, worker.js, src/utils/api.ts, and webhook.gs.",
+  "updatedAt": "2026-10-16T09:49:23.390566525Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

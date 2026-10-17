@@ -1,5 +1,59 @@
 {
-  "participants": [],
-  "scans": [],
-  "lastUpdated": "2026-10-01T12:00:00.000Z"
+  "participants": [
+    {
+      "token": "{\"fullName\":\"TEST\",\"bu\":\"IT Delivery – Cybersecurity\",\"teamName\":\"Peridot\",\"status\":\"Check-in\"}",
+      "fullName": "TEST",
+      "bu": "IT Delivery – Cybersecurity",
+      "teamName": "Peridot",
+      "status": "Check-in",
+      "timestamp": 1792132793004,
+      "dateTime": "10/16/2026, 6:39:53 AM",
+      "rowNumber": 111
+    },
+    {
+      "token": "REYNALDO AGUILAR JR",
+      "fullName": "REYNALDO AGUILAR JR",
+      "bu": "IT Delivery - Cybersecurity",
+      "teamName": "Peridot",
+      "status": "Check-in",
+      "timestamp": 1792144638331,
+      "dateTime": "10/16/2026, 9:57:18 AM",
+      "rowNumber": 2
+    }
+  ],
+  "scans": [
+    {
+      "id": "scan-1792144642064-z9jcv",
+      "timestamp": 1792144638331,
+      "dateTime": "10/16/2026, 9:57:18 AM",
+      "fullName": "REYNALDO AGUILAR JR",
+      "bu": "IT Delivery - Cybersecurity",
+      "teamName": "Peridot",
+      "status": "Check-in",
+      "isDuplicate": false,
+      "participantToken": "REYNALDO AGUILAR JR",
+      "syncedToExternal": true,
+      "syncError": null,
+      "spreadsheetId": "1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs",
+      "sheetName": "EventDay",
+      "rowNumber": 2
+    },
+    {
+      "id": "scan-1792132797740-ya1za",
+      "timestamp": 1792132793004,
+      "dateTime": "10/16/2026, 6:39:53 AM",
+      "fullName": "TEST",
+      "bu": "IT Delivery – Cybersecurity",
+      "teamName": "Peridot",
+      "status": "Check-in",
+      "isDuplicate": false,
+      "participantToken": "{\"fullName\":\"TEST\",\"bu\":\"IT Delivery – Cybersecurity\",\"teamName\":\"Peridot\",\"status\":\"Check-in\"}",
+      "syncedToExternal": true,
+      "syncError": null,
+      "spreadsheetId": "1anInd4lDcfN8xlVfKrVlvxxbC2z_72qA-L3yxi8nwrs",
+      "sheetName": "EventDay",
+      "rowNumber": 111
+    }
+  ],
+  "lastUpdated": "2026-10-16T09:57:22.064Z"
 }
